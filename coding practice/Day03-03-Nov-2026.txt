@@ -1,0 +1,146 @@
+#Day3 
+#####################################
+#tasks
+#ansible create user
+#terraform — Security Group (r6i.4xlarge EC2) 
+#kubernetes add env variables
+#shellscript- check file exist
+#nodejs build-jenkins
+#nodejs build-gitlab-ci
+
+###################################
+
+
+#ansible create user
+---
+- name: create pathnex user
+  hosts: all
+  become: yes
+
+  tasks:
+   -name : create user 
+    user:
+     name: pathnex-user
+     shell: /bin/bash 
+
+
+#terraform — Security Group (r6i.4xlarge EC2) 
+
+provider.tf
+
+provider "aws" {
+    region =  "us-east-1"
+}
+
+main.tf
+resource "aws_security_group" "pathnexsg"{
+    name = "pathnexsg"
+    description= "pathnex sg for ssh"
+
+    ingress {
+        from_port = 22
+        to_port =22
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+} 
+
+resource "aws_instance" "pathnexec2"{
+    ami = "ami-123456789asdfgds"
+    instance_type = "r6i.4xlarge"
+    vpc_security_group_ids = [aws_security_group.pathnexsg.id]
+    tags = {
+        Name = "pathnex-ec2"
+    }
+}
+
+#kubernetes add env variables
+
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pathnex-env-pod
+
+spec:
+ containers:
+ - name: app
+   image: nginx:latest
+   env:
+   - name: APP_ENV
+     value: "prod"
+
+
+#shellscript- check file exist
+
+#!/bin/bash
+FILE="/tmp/pathnex.txt"
+
+if [-f "$FILE"]; thrn
+ echo "file exists"
+else
+ echo "file dose not exists"
+fi
+
+
+#nodejs build-jenkins
+
+pipeline {
+    agent any
+    tools{
+        nodejs 'NodeJS-16'
+    }
+
+    stages{
+        stage('checkout'){
+            steps{
+                git branch 'main', url: 'https://github.com/Pathnex/sample-node-app.git'
+            }
+        }
+        stage('install-dependencies'){
+            steps{
+                sh 'npm install'
+            }
+        }
+        stage('run test'){
+            steps{
+                sh 'npm test'
+            }
+        }
+        stage('build'){
+            steps{
+                sh 'npm run build'
+            }
+        }
+    }
+}
+
+
+#nodejs build-gitlab-ci
+
+stages:
+ - install
+ - test
+ - build
+
+node-install:
+ stage: install
+ image: node:16
+ script:
+  - git clone https://github.com/Pathnex/sample-node-app.git
+  - cd sample-node-app
+  - npm install
+
+node-test:
+ stage: test
+ image:node:16
+ script:
+  - cd sample-node-app
+  - npm test
+
+node-build:
+ stage: build
+ image: node:16
+ script:
+  - cd sample-node-app
+  - npm run build 
+
