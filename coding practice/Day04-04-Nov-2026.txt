@@ -1,0 +1,117 @@
+#Day4 
+#####################################
+#tasks
+#ansible install multiple package
+#terraform - ec2 key pair c6i.8xlarge
+#kubernetes create clusterip service
+#jenkins-parallel build-test
+#gitlab-ci-parallel build-test
+###################################
+
+#ansible install multiple package
+
+---
+- name : install multiple package
+  hosts : all
+  become : yes
+
+  tasks :
+     - name : install multiple package
+        yum :
+         name : 
+          - git
+          - wget
+         state : present
+
+
+#terraform - ec2 key pair c6i.8xlarge
+
+provider.tf 
+
+provider "aws" {
+    region = "us-east-1"
+}
+
+main.tf 
+
+resource "aws_key_pair" "pathnexkey"{
+    key_name = "pathnexkey"
+    public_key = "ssh-rsa AAAA..."
+
+}
+
+resource "aws_instance" "pathnex-ec2"{
+    ami = "ami-123456789zxcvbnm"
+    instance_type = "c6i.8xlarge"
+    key_name = aws_key_pair.pathnexkey.key_name
+
+    tags = {
+     Name = "pathnex-ec2"
+    }
+}
+
+#kubernetes create clusterip service
+
+apiVersion : v1
+kind : Service 
+metadata :
+ name : pathnex-service
+spec :
+ type : ClusterIP
+ selector :
+  app : pathnex-app
+ ports :
+  - port : 80
+    targetPort : 80
+
+#jenkins-parallel build-test
+
+pipeline {
+    agent any
+    stages{
+        stage('checkout'){
+            steps {
+                git branch 'main', https://github.com/Pathnex/sample-java-app.git
+            }
+        }
+        stage ('build-test-parallel'){
+
+            parallel {
+                stage('build'){
+                   steps{
+                    sh 'mvn clean compile'
+                   }
+                }
+                stage('test'){
+                    steps{
+                       sh 'mvn test'
+                    }
+                }
+            }    
+        }
+        
+    }
+}
+
+#gitlab-ci-parallel build-test
+
+stages:
+ - build-test
+
+maven-build:
+ stage : build-tast
+ image : maven:3.8.1-jdk-17
+ script:
+  - git clone https://github.com/Pathnex/sample-java-app.git
+  - cd sample-java-app
+  - mvn clean compile
+ parallel : 1
+
+maven-test :
+ stage : build-test
+ image : maven:3.8.1-jdk-17
+ script :
+  - cd sample-java-app
+  - mcn test
+ parallel : 1
+

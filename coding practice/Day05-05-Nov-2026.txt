@@ -1,0 +1,120 @@
+#Day5
+#####################################
+#tasks
+#ansible Handler to Restart Nginx
+#terraform - EC2 with User Data (c6a.12xlarge)
+#kubernetes Resource Limits 
+#jenkins-Environment Variables
+#gitlab-ci-Environment Variables
+###################################
+
+#ansible Handler to Restart Nginx
+
+---
+- name: handler to restart Nginx
+  hosts: all
+  become: yes
+
+  tasks:
+   - name: handler to restart nginx 
+     copy:
+      src: index.html 
+      dest: /usr/share/nginx/html/index.html
+     notify: restart nginx
+
+  handlers:
+   - name: restart nginx
+     service:
+      name: nginx
+      state: restarted
+
+
+#terraform - EC2 with User Data (c6a.12xlarge)
+
+provider.tf
+
+provider "aws" {
+    region = "us-east-1"
+}
+
+main.tf
+
+resource "aws_instance" "pathnexec2" {
+    ami = "ami-123456789mnbvcxa"
+    instance_type = "c6a.12xlarge"
+
+    user_data = <<-EOF 
+
+    #!/bin/bash
+    yum install httpd -y
+    systemctl enable httpd
+    systemctl start httpd
+
+    EOF
+
+    tags = {
+        Name = "pathnexec2"
+    }
+}
+
+
+#kubernetes Resource Limits 
+
+apiVersion: v1
+kind: Pod 
+metadata:
+
+spec:
+ containers:
+  - name: app
+    image: nginx:latest
+    resources:
+     limits:
+      memory: "256Mi"
+      cpu: "500m"
+      
+#jenkins-Environment Variables
+
+pipeline {
+    agent any 
+    environment {
+        INSTITUTE_NAME = "pathnex"
+    }
+    stages{
+        stage('print'){
+            steps{
+                sh 'echo "welcome to $INSTITUTE_NAME devops training"'
+            }
+        }
+        stage('checkout'){
+            steps{
+                git branch 'main', url: 'https://github.com/Pathnex/sample-java-app.git'
+            }
+        }
+        stage('build'){
+            steps{
+                sh 'mvn clean package -Dinstutute.name=$INSTITUTE_NAME'
+            }
+        }        
+    }
+}
+
+
+
+#gitlab-ci-Environment Variables
+
+
+stages:
+ - build
+
+variables:
+ INSTITUTE_NAME: "pathnex"
+
+build:
+ - stage: build
+   image: maven:3.8.1-jdk-17
+   script:
+    - git clone : https://github.com/Pathnex/sample-java-app.git
+    - cd sample-java-app
+    - echo "welcome to $INSTITUTE_NAME" devops training "
+    - mvn clean package -Dinstutute.name=$INSTITUTE_NAME
