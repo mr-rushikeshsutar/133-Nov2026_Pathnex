@@ -1,0 +1,111 @@
+#Day9
+#####################################
+#tasks 
+#ansible - Jinja2 Template
+#terraform - Internet Gateway
+#kubernetes - ConfigMap 
+#shell-script - Check CPU Load
+#jenkins - Archive Artifactscd 
+#gitlab - Archive Artifacts
+###################################
+#ansible Jinja2 Template
+---
+ - name: deploy template for pathnex
+   hosts: all
+   become: yes
+
+   tasks:
+   - name: copy template file
+     template:
+      src: pathnex.conf.j2
+      dest: /etc/pathnex.conf
+
+#terraform - Internet Gateway
+provider.tf
+
+provider "aws" {
+region = "us-east-1"
+}
+
+main.tf
+resource "aws_vpc" "pathnexvpc"{
+cidr_block = 10.0.0.0/16
+tags = {
+Name = "pathnexvpc"
+}
+}
+
+resource "aws_internate_gatway" "pathnexsg" {
+ vpc_id = aws_vpc.pathnexvpc.id
+ tags = {
+ Name = "pathnex-ig"
+}
+}
+
+
+#kubernetes - ConfigMap 
+
+apiVersion : v1
+kind: ConfigMap
+metadata: 
+ name: pathnex-config
+
+data:
+  APP_MODE: "prod"
+  WELCOME_MSG: "Hello pathnex"
+
+#shell-script - Check CPU Load
+
+#!/bin/bash
+LOAD=$(uptime | awk '{print $10}')
+
+echo "current cpu load: $LOAD"
+
+#jenkins - Archive Artifacts
+pipeline {
+agent any 
+environment {
+INSTITUTE_NAME = "pathnex"
+}
+stages{
+stage('checkout') {
+steps{
+git branch 'main', url:'https://github.com/Pathnex/sample-java-app.git'
+}
+}
+
+stage('build') {
+steps{
+sh 'mvn clean package'
+}
+}
+
+stage('archive'){
+steps{
+ archiveArtifacts artifacts: 'target/.*jar', fingerptint: true
+}
+}
+
+}
+
+}
+
+
+#gitlab - Archive Artifacts
+
+stages:
+ - build
+ - deploy 
+
+build:
+ stage: build
+ image: mvn:3.8.9-jdk-17
+ script:
+ - git clone https://github.com/Pathnex/sample-java-app.git
+ - cd sample-java-app
+ - mvn clean package
+
+ artifacts:
+  paths:
+  - target/.*jar
+  expire_in: 1 week
