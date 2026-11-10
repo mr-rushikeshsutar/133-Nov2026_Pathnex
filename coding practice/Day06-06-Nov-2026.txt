@@ -1,0 +1,108 @@
+#Day6
+#####################################
+#tasks DEBUG DAY-Fix these broken files
+#ansible Install nginx
+#terraform - EC2
+#kubernetes Pod 
+#jenkins-checkout-build-test
+#gitlab-checkout-build-test
+###################################
+
+#ansible Install nginx
+---
+- name: install-nginx
+  hosts: all
+  become: yes
+
+  tasks:
+   - name : install nginx
+     yum:
+      name : nginx
+      state: present
+
+      
+#terraform - EC2 
+
+provider.tf
+
+provider "aws"{
+    region = "us-east=1"
+}
+
+main.tf 
+
+resource "aws_instance" "pathnex-ec2"{
+    ami = "ami-123456789zxcvbn"
+    instance_type = c6.8xlarge
+    tags = {
+        Name = "pathnex-ec2"
+    }
+}
+
+
+#kubernetes Pod
+
+apiVersion: v1
+kind: Pod
+metadata:
+ name: nginx-pod 
+spec:
+ containers:
+  - name: pathnex 
+    image: nginx 
+    ports:
+     - containersPort: 80
+
+#jenkins-checkout-build-test
+
+pipeline {
+    agent any
+    stages{
+        stage('checkout'){
+            steps{
+                git branch 'main', url:'https://github.com/Pathnex/sample-java-app.git'
+            }
+        }
+        stage('build'){
+            steps{
+                sh '''
+                mvn clean compile
+                echo "compile failed; exit code1;"
+                '''
+            }
+        }
+        stage('test'){
+            steps{
+                sh '''
+                mvn test 
+                echo "test failed; exit code1;"
+                '''
+            }
+        }
+    }
+}
+
+
+
+#gitlab-ci-Environment Variables
+
+stages :
+ - build
+ - test 
+
+build:
+ stage: build
+ image: mvn:3.8.1-jdk17 
+ script:
+  - git clone https://github.com/Pathnex/sample-java-app.git
+  - cd sample-java-app
+  - mvn clean compile
+  - echo "compile failed;exitecode1;"
+
+test:
+ stage: test
+ image: mvn:3.8.1-jdk17
+ script:
+  - cd sample-java-app
+  - mvn test
+  - echo "test failed;exitecode1;"
