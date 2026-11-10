@@ -1,0 +1,116 @@
+#Day7
+#####################################
+#tasks SPEED TYPING files
+#ansible Install nginx
+#terraform - EC2
+#kubernetes Deployment-2replicas 
+#jenkins-Parameterized
+#gitlab-Parameterized
+###################################
+
+#ansible Install nginx
+---
+- name : install nginx
+  hosts: all
+  become: yes
+  
+  tasks:
+  - name: install nginx
+    yum:
+    name: nginx
+    state: present
+
+##completed in 1 min 30 sec
+
+#terraform - EC2
+
+provider.tf
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+main.tf
+
+resource "aws_instance" "pathnex_ec2"{
+ami = "ami-123456789ddfghj"
+instance_type = "c6.8xlarge"
+
+tags = {
+   Name= "pathnex-ec2"
+}
+}
+
+##completed in 2 min 48 sec
+
+
+#kubernetes Deployment-2replicas 
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: pathnex
+ namespace: dev
+spec:
+ replicas: 2 
+ selector:
+  matchLabels:
+   app: pathnex
+
+ template:
+  metadata:
+   labels:
+     app: pathnex
+
+  spec:
+   containers:
+    - name: pathnex
+      image: nginx
+      ports:
+        containerPort: 80
+
+##completed in 4 min 1 sec
+
+#jenkins-Parameterized
+
+pipeline{
+ agent any
+ parameters{
+ string(name: 'Env', defaultValue: 'dev',
+        description: 'deploy in dev') 
+}
+ environment{
+ INSTITUTE_NAME = "Pathnex"
+}
+ stages{
+ stage('checkout'){
+   steps{
+  git branch 'main', url: 'https://github.com/Pathnex/sample-java-app.git'
+}
+}
+ stage('deploy'){
+  steps{
+  sh 'echo "deployed to $Env by $INSTITUTE_NAME"' 
+}
+}
+}
+}
+##completed in 8 min 2 sec
+
+#gitlab-Parameterized
+
+stages:
+ - deploy
+variables :
+  INSTITUTE_NAME: "PATHNEX"
+  ENVIRONMENT: "Dev"
+
+deploy:
+ stage: deploy
+ image: alpine:latest
+ script:
+  - echo "deploying to $ENVRIONMENT by $INSTITUTE_NAME"
+
+##completed in 4 min 3 sec
+
+
