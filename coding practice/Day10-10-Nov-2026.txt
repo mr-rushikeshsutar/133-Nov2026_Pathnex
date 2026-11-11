@@ -1,0 +1,116 @@
+
+
+#Day10
+#####################################
+#tasks 
+#ansible - When Condition
+#terraform - Route Table + Association
+#kubernetes - Secret
+#shell-script - For Loop 1–10
+#jenkins - Cache Maven Dependencies
+#gitlab - Cache Maven Dependencies
+###################################
+
+#ansible When Condition
+
+---
+ - name: install tool based on os
+   hosts: all
+   become: yes
+
+   tasks:
+   - name: install htop
+     yum:
+      name: htop
+      state: present
+     when: ansible_facts['os_family'] == "RedHat"
+
+
+#terraform - Route Table + Association
+
+
+resource "aws_route_table" "pathnexrt"{
+vpc_id = aws_vpc.pathnex_vpc.id
+route {
+cidr_block = "0.0.0.0/0"
+gateway_id = aws_internet_gateway.pathnexig.id
+}
+tags = {
+Name = "pathnex_route-table"
+}
+}
+
+resource "aws_route_table_association" "pathnexrta" {
+subnet_id = aws_subnet.pathnexsub.id
+route_table_id = aws_route_table.pathnexrt.id
+}
+
+
+#kubernetes - Secret
+
+
+apiVersion: v1
+kind: Secret 
+metadata:
+ name: pathnex-secret
+type: Opaque
+data:
+ password: cGF0aG5leDEyMw==   # "pathnex123" base64
+
+
+#shell-script - For Loop 1–10
+ 	 	 	 	
+!/bin/bash
+for i in {1..10}; do
+ echo "Number": $i'
+done
+
+
+#jenkins - Cache Maven Dependencies
+
+pipeline {
+agent any 
+environment {
+INSTITUTE_NAME = "pathnex"
+}
+stages{
+
+stage ('checkout'){
+ steps{
+ git branch 'main', url:'https://github.com/Pathnex/sample-java-app.git' 
+ }
+}
+
+stage('build') {
+steps {
+sh '''
+  if [-d ".m2"]; then
+    echo "using cached dependencies"
+
+else 
+ mvn clean compile
+fi 
+...
+
+}
+}
+}
+
+}
+
+#gitlab - Cache Maven Dependencies
+
+stages:
+ - build
+
+build:
+ stage: build
+ image: mvn:3.8.9-eclipse-temurin-17
+ cache:
+  key: maven-cache
+  paths:
+  - .m2/repository/
+ script:
+ - git clone https://github.com/Pathnex/sample-java-app.git
+ - cd sample-java-app
+ - mvn clean compile
