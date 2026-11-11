@@ -1,0 +1,124 @@
+#Day11
+#####################################
+#tasks 
+#ansible - Install MariaDB
+#terraform - Output Public IP (r5.2xlarge)
+#kubernetes - Sidecar Container
+#shell-script - Function Example
+#jenkins - Notifications
+#gitlab - Notifications
+###################################
+
+#ansible - Install MariaDB
+
+
+---
+- name: install MariaDB
+  hosts: all
+  become: yes
+
+  tasks:
+  - name: install MariaDB
+    yum:
+     name: mariadb-server
+     state: present
+  - name: start service
+    service:
+     name: mariadb
+     state: started
+     enabled: yes
+
+#terraform - Output Public IP (r5.2xlarge)
+
+resource "aws_instance" "pathnex-server" {
+ami = "ami-123456zxcvbnm"
+instance_type = "r5.2xlarge"
+tags = {
+Name = "pathnex-ec2"
+}
+}
+
+output "pathnexpubip"{
+value = aws_instance.pathnex-server.ip
+}
+
+#kubernetes - Sidecar Container
+
+apiVersion: v1
+kind : Pod
+metadata:
+ name: pathnex-pod
+spec:
+ containers:
+ - name : main
+   image: nginx
+ - name: sidecar
+   image: busybox
+   command: ["sh", "-c","echo sidecar runing; sleep 3600"]
+
+#shell-script - Function Example
+
+#!/bin/bash
+
+greet() {
+echo "welcome to pathnex devops training"
+}
+
+greet
+
+#jenkins - Notifications
+
+
+pipeline {
+agent any 
+environment {
+INSTITUTE_NAME = "PATHNEX"
+}
+stages{
+stage('checkout'){
+steps{
+ git branch 'main', url: 'https://github.com/Pathnex/sample-java-app.git'
+}
+}
+stage('build'){
+
+steps{
+sh 'mvn clean package'
+}
+}
+
+}
+
+post {
+success {
+
+mail to : 'team@pathnex.com'
+subject : "SUCCESS: BUILD #${env.BUILD_NUMBER}",
+body: "Build completed successfully for $INSTITUE_NAME"
+}
+
+failure {
+mail to : 'team@pathnex.com'
+subnect : "FAILUER : BUILD #${env.BUILD_NUMBER}",
+body:
+"Build failed for $INSTITUTE_NAME"
+}
+}
+}
+
+#gitlab - Notifications
+
+
+stage: 
+ - build
+
+build:
+ stage: build
+ image: mvn-3.8.9-eclips-temurin-17
+ script:
+ - git clone https://github.com/Pathnex/sample-java-app.git
+ - cd sample-java-app
+ - mvn clean package
+ after_script:
+ - echo "sending notification email to team@pathnex.com"
+
