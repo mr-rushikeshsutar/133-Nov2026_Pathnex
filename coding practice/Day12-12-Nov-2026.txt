@@ -1,0 +1,126 @@
+#Day12
+#####################################
+#tasks 
+#ansible - Ensure File With Content
+#terraform - RDS Skeleton
+#kubernetes - Rolling Update Strategy
+#shell-script - Backup Directory
+#jenkins - Multi-branch Pipelines
+#gitlab - Multi-branch Pipelines
+###################################
+
+#ansible - Ensure File With Content
+---
+- name: create config file for pathnex
+  hosts: all
+  become: yes
+ 
+  tasks:
+  - name : write content to file
+    copy:
+     dest: /etc/pathnex.conf
+     content : |
+      welcome to pathnex devops training
+      today is 12th day 
+
+
+
+
+#terraform - RDS Skeleton
+
+resource "aws_db_instance" "pathnexrds" {
+allocated_storage = 20
+engine = "mysql"
+engin_version = "8.0"
+instance_class = "db.t3.micro"
+db_name = "pathnex"
+username = "admin"
+password = "password123"
+skip_final_snapshot = true
+}
+
+
+#kubernetes - Rolling Update Strategy
+
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+ name: pathnex-rolling
+spec:
+ replicas: 3
+ strategy :
+  type: RollingUpdate
+  rollingUpdate:
+   maxSurge: 1
+   maxUnavailable: 1
+ selector:
+  matchLabels:
+   app: roll
+ template:
+  metadata:
+   labels: 
+    app: roll
+  spec:
+   containers:
+   - name: web
+     image: nginx
+
+
+#shell-script - Backup Directory
+
+#!/bin/bash
+source="/var/log"
+dest ="/backup/pathnex-$(date + %F).tar.gz"
+
+
+mkdir -p /backup
+
+tar -czf $dest $source 
+echo "backup created at : $dest"
+
+#jenkins - Multi-branch Pipelines
+
+pipeline {
+agent any
+environment{
+INSTITUTE_NAME = "pathnex"
+}
+stages{
+stage('checkout'){
+steps{
+checkout scm 
+}
+}
+
+stage('build'){
+steps{
+sh 'mvn clean package'
+}
+}
+}
+}
+
+
+
+#gitlab - Multi-branch Pipelines
+
+stages:
+- build
+
+build-main:
+ stage: build 
+ image: mvn:3.8.9-eclips-temurin-17
+ script:
+ - git clone 
+ - cd 
+ - mvn clean package
+ rules:
+ - if : "$CI_COMMIT_BRANCH === "main""
+
+build-dev:
+ stage: build
+ image: mvn:3.8.9-eclips-temurin-17
+ script:
+ - mvn clean package
+ rules :
+ - if : "$CI_COMMIT_BRANCH ===="dev""
