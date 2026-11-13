@@ -1,0 +1,126 @@
+#Day13
+#####################################
+#tasks Fix the following broken files
+#ansible - Install nginx
+#terraform - ec2
+#kubernetes - deployment
+#shell-script - srevicestart
+#jenkins - Matrix
+#gitlab - Matrix
+###################################
+
+---
+- name: install nginx
+  hosts: all 
+  become: yes
+
+  tasks:
+  - name: install-nginx
+    yum:
+     name: nginx
+     state: present 
+
+  - name: service-start
+    service:
+     name: nginx
+     enabled: yes
+     state: started
+
+#terraform - ec2
+
+resource "aws_instance" "pathnexec2" {
+ ami = "ami-11345zxcvbnm"
+ instance_type = "c5.large"
+
+ tags = {
+ Name = "pathnex-ec2" 
+}
+}
+
+#kubernetes - deployment
+
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+ name: nginx-deployment
+
+spec:
+ replicas: 2
+
+ selector:
+  matchLabels: 
+    app: pathnex
+
+ template:
+  metadata:
+   labels: 
+    app: pathnex
+	
+  spec:
+   containers:
+    - name: web
+      image: nginx
+      ports:
+       - containerPort: 80
+
+
+#shell-script - srevicestart
+
+#!/bin/bash
+service="nginx"
+
+if systemctl is-active --quiet "$service"; then
+echo "service is running"
+else
+ systemctl restart "$service"
+ echo "service is restarted"
+fi
+
+#jenkins - Matrix
+
+pipeline {
+agent any 
+environment {
+
+INSTITUTE_NAME="PATHNEX"
+
+} 
+stages{
+stage('build-matrix'){
+matrix {
+axes{
+axis{
+ name 'JAVA_VERSION'
+ value '8','11','17'
+}
+}
+ stage('build'){
+ steps{
+ sh '''
+   echo 'Institute: $INSTITUTE_NAME'
+   echo "Building with java: $JAVA_VERSION"
+   '''
+}
+}
+
+}
+
+}
+}
+
+}
+#gitlab - Matrix
+
+
+stage:
+ - build
+
+build:
+ stage: build
+ image: mvn:3.8.9-eclips-temurin-17
+ parallel:
+  matrix:
+  - JAVA_VERSION: ['8','11','17']
+ script:
+ - echo  "building with java: $JAVA_VERSION"
+
