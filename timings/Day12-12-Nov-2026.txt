@@ -1,0 +1,3 @@
+#1hr    -  revised k8s
+#40 min -  coding practice for l1 repo
+#3 hr   -  watch related vdo from pathnex channel 
