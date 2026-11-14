@@ -1,0 +1,4 @@
+#1hr    -  revised k8s with terraform
+#40 min -  coding practice for l1 repo
+#3 hr   -  watch related vdo from pathnex channel 
+#30 min -  revision
