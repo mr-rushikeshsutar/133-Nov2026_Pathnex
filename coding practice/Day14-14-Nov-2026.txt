@@ -1,0 +1,110 @@
+#Day14
+#####################################
+#tasks MINI PROJECT
+#terraform - vpc,subnet,ig,routetable,ec2 - added aws-terraform-ec2 folder
+#ansible - Install nginx expose webpage 
+#kubernetes - deployment
+#shell-script - Print CPU, Memory, Disk
+#jenkins - Scheduled Pipelines
+#gitlab - Scheduled Pipelines
+###################################
+#terraform - vpc,subnet,ig,routetable,ec2
+#ansible - Install nginx expose webpage -added ansible folder
+
+#kubernetes - deployment
+apiVersion : apps/v1
+kind: Deployment 
+metadata: 
+ name: nginx-deployment
+
+spec:
+ replicas: 2
+
+ selector:
+  matchLabels :
+   app: pathnex
+  
+ template:
+  metadata:
+   labels:
+    app: pathnex
+
+  spec:
+   containers:
+    - name: web
+      image: nginx
+      ports:
+       - containerPort: 80
+
+#service
+
+apiVersion: v1
+kind: Service
+metadata:
+ name: nginx-service
+
+ spec:
+  type: NodePort
+
+ selector:
+  app: pathnex
+ 
+ ports:
+  -port: 80
+   targetPort: 80
+   nodePort: 30080
+   protocol: TCP  
+
+
+#shell-script - Print CPU, Memory, Disk
+
+#!/bin/bash
+CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | awk '{print 100 - $8}')
+ 
+echo "CPU Usage: ${CPU_USAGE}%"
+echo "memory usage: "
+free -h
+echo "disk usgae"
+df -h /
+
+#jenkins - Scheduled Pipelines
+pipeline {
+agent any 
+environment {
+INSTITUTE_NAME= "PATHNEX"
+}
+
+triggers {
+ cron('H 2 * * *') 
+}
+stages{
+stage('checkout') {
+steps{
+
+git branch 'main', url: 'https://github.com/Pathnex/sample-java-app.git' 
+
+}
+}
+
+stage('build'){
+steps{
+sh 'mvn clean compile'
+}
+} 
+}
+
+}
+
+#gitlab - Scheduled Pipelines
+
+stage:
+ - build
+
+build:
+ stage: build
+ image: mvn:3.8.9-eclips-temurin-17
+ script:
+ - git clone https://github.com/Pathnex/sample-java-app.git
+ - cd sample-java-app
+ - mvn clean compile
+
